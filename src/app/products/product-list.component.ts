@@ -1,8 +1,11 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { ProductCategory } from './../product-categories/product-category';
+import { Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
 
 import { ProductService } from './product.service';
-import { EMPTY } from 'rxjs';
+import { Product } from './product';
+import { EMPTY, Observable } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { ProductCategoryService } from '../product-categories/product-category.service';
 
 @Component({
   templateUrl: './product-list.component.html',
@@ -14,7 +17,7 @@ export class ProductListComponent {
   errorMessage = '';
   categories;
 
-  products$ = this.productService.products$
+  products$ = this.productService.productsWithCategory$
     .pipe(
       catchError(err => {
         this.errorMessage = err;
@@ -23,6 +26,7 @@ export class ProductListComponent {
     );
 
   constructor(private productService: ProductService) { }
+
 
   onAdd(): void {
     console.log('Not yet implemented');

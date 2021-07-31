@@ -1,8 +1,9 @@
+import { ProductCategoryService } from './../product-categories/product-category.service';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
-import { Observable, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { Observable, throwError, combineLatest } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 
 import { Product } from './product';
 import { Supplier } from '../suppliers/supplier';
@@ -20,9 +21,24 @@ export class ProductService {
       tap(data => console.log('Products: ', JSON.stringify(data))),
       catchError(this.handleError)
     );
+  
+  productsWithCategory$ = combineLatest([
+    this.products$, 
+    this.productCategoryService.productCategories$
+  ]).pipe(
+      map(([products, categories]) => 
+        products.map(product => ({
+            ...product,
+            category: categories.find(c => c.id === product.categoryId).name,
+            price: product.price * 1.5,
+            searchKey: [product.productName]
+        }) as Product)
+      )
+    );
 
   constructor(private http: HttpClient,
-              private supplierService: SupplierService) { }
+              private supplierService: SupplierService,
+              private productCategoryService: ProductCategoryService) { }
 
   private fakeProduct() {
     return {
@@ -49,7 +65,7 @@ export class ProductService {
       // The response body may contain clues as to what went wrong,
       errorMessage = `Backend returned code ${err.status}: ${err.body.error}`;
     }
-    console.error(err);
+    console.error(errorMessage);
     return throwError(errorMessage);
   }
 
